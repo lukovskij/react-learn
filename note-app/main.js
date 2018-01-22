@@ -40,10 +40,15 @@ const Note = React.createClass({
 });
 
 const NoteGrid = React.createClass({
+    componentDidMount(){
+       this.$el = $(this.el);
+
+       this.$el.slick({})
+    },
     render(){
         const { notes } = this.props;
         return (
-            <div className="columns">
+            <div className="columns" ref={el => this.el = el}>
             {
                 notes.map(element => 
                     <Note
