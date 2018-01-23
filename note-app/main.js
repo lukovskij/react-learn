@@ -14,7 +14,14 @@ const NOTES = [{
     text : 'Hey i am first Note'
 }]
 
+// через рефс можно отримувати силку на компоненти і також через неї можна викликати методи цього компонента
+// тобіш якщо ми передаєм на теги то це силка на узєл дом дерева а коли на компонент то на екземпляр цього компонента
+
+
 const Note = React.createClass({
+	deleteNote(){
+    this.props.handleOnDelete(this.props.id);
+	},
     render(){
         const { id, color, children } = this.props;
         return (
@@ -31,7 +38,7 @@ const Note = React.createClass({
               </div>
             </div>
             <footer className="card-footer">
-              <div className="card-footer-item">Delete</div>
+              <div className="card-footer-item" onClick={this.deleteNote}>Delete</div>
             </footer>
           </div>
           </div>
@@ -40,21 +47,18 @@ const Note = React.createClass({
 });
 
 const NoteGrid = React.createClass({
-    componentDidMount(){
-       this.$el = $(this.el);
-
-       this.$el.slick({})
-    },
     render(){
-        const { notes } = this.props;
+				const { notes, onDeleteNote } = this.props;
+				console.log(this.props)
         return (
             <div className="columns" ref={el => this.el = el}>
             {
-                notes.map(element => 
+                notes.map(element =>
                     <Note
                        key={element.id}
                        id={element.id}
-                       color={element.color}
+											 color={element.color}
+											 handleOnDelete={onDeleteNote}
                     >
                        {element.text}
                     </Note>
@@ -104,20 +108,55 @@ const NoteEditor = React.createClass({
 const NoteApp = React.createClass({
     getInitialState(){
       return {
-          notes : NOTES
+          notes : []
       }
-    },
-    addNewNote(note){
+		},
+
+	componentDidMount() {
+			this.getFromLocalStorage();
+	},
+
+	componentDidUpdate(prevProps, prevState){  // метод проверки состояния и нужно ли его обновлять
+
+		if(prevState.notes !== this.state.notes){
+      this.updateLocalStorage()
+		}
+
+	},
+
+  addNewNote(note){
       this.setState({
           notes : [note, ...this.state.notes]
-      })
-    },
+			})
+		},
+
+		handleDeleteNote(id){
+      let filteredNotes = this.state.notes.filter( item => {
+				return item.id !== id
+			})
+
+			this.setState({
+				notes : filteredNotes
+			})
+		},
+
+		updateLocalStorage(){
+			const jsonNotes = JSON.stringify(this.state.notes);
+			localStorage.setItem('notes' , jsonNotes)
+		},
+
+		getFromLocalStorage(){
+			const items = localStorage.getItem('notes');
+			this.setState({
+				notes : JSON.parse(items)
+			})
+		},
     render(){
         return(
             <div className="note-app">
                 <h1 className="title"> Note App </h1>
                 <NoteEditor addNewNote={this.addNewNote}></NoteEditor>
-               <NoteGrid notes={this.state.notes}></NoteGrid>
+               <NoteGrid notes={this.state.notes} onDeleteNote={this.handleDeleteNote}></NoteGrid>
             </div>
         )
     }
